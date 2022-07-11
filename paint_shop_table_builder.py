@@ -210,5 +210,6 @@ def time_table_gen(source, cold_start_min = 30):
     else:
       l1.loc[i[0] - 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
   l1 = l1.sort_index().reset_index(drop=True)
+  return l1
 
 
