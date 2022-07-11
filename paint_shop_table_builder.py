@@ -9,17 +9,7 @@ Original file is located at
 
 import numpy as np
 import pandas as pd
-
-from google.colab import drive
-drive.mount('/content/drive')
-
-df = pd.read_csv("/content/drive/MyDrive/sequenced_28_output.csv")
-
-
-
-l1 = df[df["PRIORITY"] == 0]
-
-l1
+import re
 
 class timer:
   def __init__(self, hour, min, sec):
@@ -53,36 +43,9 @@ class timer:
     out = hrs + ":" + mns + ":" + secs
     return out
 
-time = timer(8,30,0)
 
-cold_start_min = 30
-
-time.add_min(30)
-
-x = time.print_time()
-
-print(x)
-
-l1["IN-Time"] = " "
-l1["OUT-Time"] = " "
-
-l1.iloc[[0],[-2]] = time.print_time()
-
-l1
-
-br1 = timer(12,0,0)
-br2 = timer(17,0,0)
-br3 = timer(3,0,0)
-br4 = timer(8,0,0)
-bre1 = timer(12,30,0)
-bre2 = timer(23,30,0)
-bre3 = timer(3,30,0)
-break_st = [br1, br2, br3]
-break_end = [bre1,bre2,bre3]
-
-import re
 def setup_colour():
-  colourfile = pd.ExcelFile('/content/drive/MyDrive/Light & Dark Color Shade List in MES.xlsx')
+  colourfile = pd.ExcelFile('Light & Dark Color Shade List in MES(1).xlsx')
   colourdf = pd.read_excel(colourfile, colourfile.sheet_names[0] )
   colourdf.drop(colourdf.columns[0:2], axis = 1, inplace = True)
   colourdf= colourdf.iloc[5:]
@@ -140,95 +103,112 @@ def time_comp(t1,t2):
         else :
           return False
 
-t1=timer(17,0,0)
-t2 = timer(17,11,0)
-print(time_comp(t2,t1))
+def time_table_gen(source, cold_start_min = 30):
+  df = pd.read_csv(source)
+  l1 = df[df["PRIORITY"] == 0]
 
-cur_break = 0
-breaker = False
-bs =  False
-i_list = []
-bset = True
-for i in range(0,len(l1)):
-  if (i < len(l1) - 1):
-    cycle_time = 1
-    sim_sku_change = 0
-    change_over_time = 0
-    if ( check_shade(l1.iloc[i][-5]) == check_shade(l1.iloc[i+1][-5])):
-      change_over_time = 8 
-    else:
-      change_over_time = 20
-    qt = (l1.iloc[i])[-4]
-    temp_time = timer(time.hour,time.min,time.sec)
-    final_time = qt*cycle_time + (qt-1)*sim_sku_change
-    temp_time.add_min(final_time)
-    if ((shift(time) == 2 and shift(temp_time) == 1) or (bset == False and shift(time) == 1)):
-      if(shift(time) == 1):
-        l1.loc[i - 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+  time = timer(8,30,0)
+
+
+  time.add_min(cold_start_min)
+
+
+  l1["IN-Time"] = " "
+  l1["OUT-Time"] = " "
+
+  l1.iloc[[0],[-2]] = time.print_time()
+
+  br1 = timer(12,0,0)
+  br2 = timer(17,0,0)
+  br3 = timer(3,0,0)
+  br4 = timer(8,0,0)
+  bre1 = timer(12,30,0)
+  bre2 = timer(23,30,0)
+  bre3 = timer(3,30,0)
+  break_st = [br1, br2, br3]
+  break_end = [bre1,bre2,bre3]
+
+
+  cur_break = 0
+  breaker = False
+  bs =  False
+  i_list = []
+  bset = True
+  for i in range(0,len(l1)):
+    if (i < len(l1) - 1):
+      cycle_time = 1
+      sim_sku_change = 0
+      change_over_time = 0
+      if ( check_shade(l1.iloc[i][-5]) == check_shade(l1.iloc[i+1][-5])):
+        change_over_time = 8 
+      else:
+        change_over_time = 20
+      qt = (l1.iloc[i])[-4]
+      temp_time = timer(time.hour,time.min,time.sec)
+      final_time = qt*cycle_time + (qt-1)*sim_sku_change
+      temp_time.add_min(final_time)
+      if ((shift(time) == 2 and shift(temp_time) == 1) or (bset == False and shift(time) == 1)):
+        if(shift(time) == 1):
+          l1.loc[i - 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+          break
+        breaker = True
+      if (bset and ((time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])) or ((time_comp(time,break_st[cur_break]))))):
+        if((time_comp(time,break_st[cur_break]))):
+          bs = True
+        if (cur_break == 1):
+          time.add_min(390)
+        else:
+          time.add_min(30)
+        if (bs):
+          l1.iloc[[i],[-2]] = time.print_time()
+          i_list.append([i,1,cur_break])
+        else:
+          i_list.append([i,0, cur_break])
+        cur_break = (cur_break + 1)%3
+        if(cur_break == 0):
+          bset = False
+      
+      bs = False
+      time.add_min(final_time)
+      l1.iloc[[i],[-1]] = time.print_time()
+      time.add_min(change_over_time)
+      if (breaker):
+        l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
         break
-      breaker = True
-    if (bset and ((time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])) or ((time_comp(time,break_st[cur_break]))))):
-      if((time_comp(time,break_st[cur_break]))):
-        bs = True
-      if (cur_break == 1):
-        time.add_min(390)
-      else:
-        time.add_min(30)
-      if (bs):
-        l1.iloc[[i],[-2]] = time.print_time()
-        i_list.append([i,1,cur_break])
-      else:
-        i_list.append([i,0, cur_break])
-      cur_break = (cur_break + 1)%3
-      if(cur_break == 0):
-        bset = False
-    
-    bs = False
-    time.add_min(final_time)
-    l1.iloc[[i],[-1]] = time.print_time()
-    time.add_min(change_over_time)
-    if (breaker):
-      l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
-      break
-    l1.iloc[[i+1],[-2]] = time.print_time()
-  else :
-    cycle_time = 1
-    sim_sku_change = 1
-    qt = (l1.iloc[i])[-4]
-    final_time = qt*cycle_time + (qt-1)*sim_sku_change
-    temp_time.add_min(final_time)
-    if (shift(time) == 2 and shift(temp_time) == 1):
-      breaker = True
-    if (time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])):
-      if((time_comp(time,break_st[cur_break]))):
-        bs = True
-      if (cur_break == 1):
-        time.add_min(390)
-      else:
-        time.add_min(30)
-      if (bs):
-        l1.iloc[[i],[-2]] = time.print_time()
-      cur_break = (cur_break + 1)%3  
-    bs = False
-    time.add_min(final_time)
-    if (breaker):
-      l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
-      break
-    l1.iloc[[i],[-1]] = time.print_time()
-for i in i_list:
-  if (i[1] == 0):
+      l1.iloc[[i+1],[-2]] = time.print_time()
+    else :
+      cycle_time = 1
+      sim_sku_change = 1
+      qt = (l1.iloc[i])[-4]
+      final_time = qt*cycle_time + (qt-1)*sim_sku_change
+      temp_time.add_min(final_time)
+      if (shift(time) == 2 and shift(temp_time) == 1):
+        breaker = True
+      if (time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])):
+        if((time_comp(time,break_st[cur_break]))):
+          bs = True
+        if (cur_break == 1):
+          time.add_min(390)
+        else:
+          time.add_min(30)
+        if (bs):
+          l1.iloc[[i],[-2]] = time.print_time()
+        cur_break = (cur_break + 1)%3  
+      bs = False
+      time.add_min(final_time)
+      if (breaker):
+        l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+        break
+      l1.iloc[[i],[-1]] = time.print_time()
+  for i in i_list:
+    if (i[1] == 0):
       l1.loc[i[0] + 0.4] = l1.loc[i[0]]
       l1.loc[[i[0]], ["OUT-Time"]] = break_st[i[2]].print_time()
       l1.loc[i[0] + 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
       l1.loc[[i[0] + 0.4],["IN-Time"]] = break_end[i[2]].print_time()
 
-  else:
-    l1.loc[i[0] - 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
-l1 = l1.sort_index().reset_index(drop=True)
+    else:
+      l1.loc[i[0] - 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
+  l1 = l1.sort_index().reset_index(drop=True)
 
-i_list
-
-bset
-
-l1
 
