@@ -103,10 +103,10 @@ def time_comp(t1,t2):
         else :
           return False
 
-def time_table_gen(source, cold_start_min = 30):
+def time_table_gen(source, line ,cold_start_min = 30):
   df = pd.read_csv(source)
-  l1 = df[df["PRIORITY"] == 0]
-
+  l1 = df[df["PRIORITY"] == line]
+  l1.reset_index(drop = True, inplace = True)
   time = timer(8,30,0)
 
 
