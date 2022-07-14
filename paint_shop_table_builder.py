@@ -106,9 +106,15 @@ def time_comp(t1,t2):
 def time_table_gen(source, line ,cold_start_min = 30):
   df = pd.read_csv(source)
   if (line == 1):
-    l1 = df[df["PRIORITY"] == 1 or df["PRIORITY"] == 0]
+    t1 =  list((df["PRIORITY"]).astype(int) == 1)
+    t0 =  list((df["PRIORITY"]).astype(int) == 0)
+    to = list(np.logical_or(t1,t0))
+    l1 = df[to]
   if (line == 2):
-    l1 = df[df["PRIORITY"] == 2 or df["PRIORITY"] == 3]
+    t2 =  list((df["PRIORITY"]).astype(int) == 2)
+    t3 =  list((df["PRIORITY"]).astype(int) == 3)
+    to = list(np.logical_or(t2,t3))
+    l1 = df[to]
   l1.reset_index(drop = True, inplace = True)
   time = timer(8,30,0)
 
