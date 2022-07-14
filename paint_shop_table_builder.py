@@ -126,7 +126,7 @@ def time_table_gen(source, line ,cold_start_min = 30):
   l1["OUT-Time"] = " "
 
   l1.iloc[[0],[-2]] = time.print_time()
-
+  print(l1)
   br1 = timer(12,0,0)
   br2 = timer(17,0,0)
   br3 = timer(3,0,0)
