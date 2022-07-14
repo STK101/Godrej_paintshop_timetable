@@ -104,7 +104,7 @@ def time_comp(t1,t2):
           return False
 
 def time_table_gen(source, line ,cold_start_min = 30):
-  df = pd.read_csv(source)
+  df = pd.read_csv(source, index_col = 0)
   if (line == 1):
     t1 =  list((df["PRIORITY"]).astype(int) == 1)
     t0 =  list((df["PRIORITY"]).astype(int) == 0)
