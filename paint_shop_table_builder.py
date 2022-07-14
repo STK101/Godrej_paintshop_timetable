@@ -71,7 +71,7 @@ def check_shade(colour):
     return 1
 
 def shift(t1):
-  if ( (t1.hour > 8 and t1.hour < 17) or (t1.hour == 8 and t1.min >= 0)):
+  if ( (t1.hour > 8 and t1.hour < 15) or (t1.hour == 8 and t1.min >= 0)):
     return 1
   else:
     return 2
@@ -127,7 +127,7 @@ def time_table_gen(source, line ,cold_start_min = 30):
 
   l1.iloc[[0],[-2]] = time.print_time()
   br1 = timer(12,0,0)
-  br2 = timer(17,0,0)
+  br2 = timer(15,0,0)
   br3 = timer(3,0,0)
   br4 = timer(8,0,0)
   bre1 = timer(12,30,0)
