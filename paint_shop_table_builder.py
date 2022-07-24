@@ -103,8 +103,10 @@ def time_comp(t1,t2):
         else :
           return False
 
-def time_table_gen(source, line = 1 ,cold_start_min = 30):
-  df = pd.read_csv(source, index_col = 0)
+def time_table_gen(source, line ,cold_start_min = 30):
+  df = source#pd.read_csv(source, index_col = 0)
+  if (len(df) == 0):
+    return df
   if (line == 1):
     t1 =  list((df["PRIORITY"]).astype(int) == 1)
     t0 =  list((df["PRIORITY"]).astype(int) == 0)
@@ -117,7 +119,8 @@ def time_table_gen(source, line = 1 ,cold_start_min = 30):
     l1 = df[to]
   l1.reset_index(drop = True, inplace = True)
   time = timer(8,30,0)
-
+  if (len(l1) == 0):
+    return l1
 
   time.add_min(cold_start_min)
 
@@ -151,7 +154,7 @@ def time_table_gen(source, line = 1 ,cold_start_min = 30):
         change_over_time = 8 
       else:
         change_over_time = 20
-      qt = (l1.iloc[i])[-4]
+      qt = int((l1.iloc[i])[-4])
       temp_time = timer(time.hour,time.min,time.sec)
       final_time = qt*cycle_time + (qt-1)*sim_sku_change
       temp_time.add_min(final_time)
@@ -187,7 +190,8 @@ def time_table_gen(source, line = 1 ,cold_start_min = 30):
     else :
       cycle_time = 1
       sim_sku_change = 1
-      qt = (l1.iloc[i])[-4]
+      qt = int((l1.iloc[i])[-4])
+      temp_time = timer(time.hour,time.min,time.sec)
       final_time = qt*cycle_time + (qt-1)*sim_sku_change
       temp_time.add_min(final_time)
       if (shift(time) == 2 and shift(temp_time) == 1):
@@ -218,6 +222,7 @@ def time_table_gen(source, line = 1 ,cold_start_min = 30):
     else:
       l1.loc[i[0] - 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
   l1 = l1.sort_index().reset_index(drop=True)
+  l1['DATE'] = l1['DATE'].astype(str)
   return l1
 
 
