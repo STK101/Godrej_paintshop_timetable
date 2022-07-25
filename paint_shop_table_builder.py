@@ -130,7 +130,7 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
 
   l1["IN-Time"] = " "
   l1["OUT-Time"] = " "
-  print(l1)
+
   l1.iloc[[0],[-2]] = time.print_time()
   br1 = timer(12,0,0)
   br2 = timer(15,0,0)
@@ -142,21 +142,28 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
   break_st = [br1, br2, br3]
   break_end = [bre1,bre2,bre3]
 
-
+  backlog_added = False
   cur_break = 0
   breaker = False
   bs =  False
   i_list = []
   bset = True
+  fg_df = pd.read_csv("fg_list - Sheet1.csv")
+  fg_lis = list(fg_df["FG IC"])
   for i in range(0,len(l1)):
-    if (i < len(l1) - 1):
+    if (l1.loc[i][2] in fg_lis):
+      cycle_time = 0
+    else :
       cycle_time = 1
+    if (i < len(l1) - 1):
       sim_sku_change = 0
       change_over_time = 0
       if ( check_shade(l1.iloc[i][-5]) == check_shade(l1.iloc[i+1][-5])):
         change_over_time = 8 
       else:
         change_over_time = 20
+      if (cycle_time == 0):
+        change_over_time = 0
       qt = int((l1.iloc[i])[-4])
       temp_time = timer(time.hour,time.min,time.sec)
       final_time = qt*cycle_time + (qt-1)*sim_sku_change
@@ -164,16 +171,23 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
       if ((shift(time) == 2 and shift(temp_time) == 1) or (bset == False and shift(time) == 1)):
         if(shift(time) == 1):
           l1.loc[i - 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+          backlog_added = True
           break
         breaker = True
-      if (bset and ((time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])) or ((time_comp(time,break_st[cur_break]))))):
+      while (bset and ((time_comp(break_st[cur_break], time) and time_comp(temp_time, break_st[cur_break])) or ((time_comp(time,break_st[cur_break]))))):
         if((time_comp(time,break_st[cur_break]))):
           bs = True
         if (cur_break == 1):
-          time.add_min(390)
+          print("big_breal")
+          print(time.print_time())
+          time.add_min(510)
+          print(time.print_time())
         else:
+          print("small_break")
           time.add_min(30)
+          print(time.print_time())
         if (bs):
+          print("yo")
           l1.iloc[[i],[-2]] = time.print_time()
           i_list.append([i,1,cur_break])
         else:
@@ -188,11 +202,11 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
       time.add_min(change_over_time)
       if (breaker):
         l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+        backlog_added = True
         break
       l1.iloc[[i+1],[-2]] = time.print_time()
     else :
-      cycle_time = 1
-      sim_sku_change = 1
+      sim_sku_change = 0
       qt = int((l1.iloc[i])[-4])
       temp_time = timer(time.hour,time.min,time.sec)
       final_time = qt*cycle_time + (qt-1)*sim_sku_change
@@ -203,7 +217,7 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
         if((time_comp(time,break_st[cur_break]))):
           bs = True
         if (cur_break == 1):
-          time.add_min(390)
+          time.add_min(510)
         else:
           time.add_min(30)
         if (bs):
@@ -213,6 +227,7 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
       time.add_min(final_time)
       if (breaker):
         l1.loc[i + 0.2] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
+        backlog_added = True
         break
       l1.iloc[[i],[-1]] = time.print_time()
   for i in i_list:
@@ -225,7 +240,7 @@ def time_table_gen(source, line = 1,cold_start_min = 30):
     else:
       l1.loc[i[0] - 0.2] = [" ", " ", " ", "Break", " ", " ", " ", " ", " "]
   l1 = l1.sort_index().reset_index(drop=True)
+  if(backlog_added == False):
+    l1.loc[len(l1)] = [" ", " ", " ", "BackLog", " ", " ", " ", " ", " "]
   l1['DATE'] = l1['DATE'].astype(str)
   return l1
-
-
