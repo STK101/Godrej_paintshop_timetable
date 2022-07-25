@@ -81,7 +81,7 @@ def time_comp(t1,t2):
   if (s1 != s2):
     return (s1 > s2)
   else:
-    if (s1 == 1 or (t1.hour >= 17 and t2.hour >= 17 and t1.hour <= 23 and t2.hour <= 23)):
+    if (s1 == 1 or (t1.hour >= 15 and t2.hour >= 15 and t1.hour <= 23 and t2.hour <= 23)):
       if (t1.hour > t2.hour):
         return True
       elif (t1.hour == t2.hour and t1.min > t2.min):
@@ -89,9 +89,9 @@ def time_comp(t1,t2):
       else :
         return False
     else:
-      if (t1.hour >= 17 and t1.hour <= 23):
+      if (t1.hour >= 15 and t1.hour <= 23):
         return False
-      elif (t2.hour >= 17 and t2.hour <= 23):
+      elif (t2.hour >= 15 and t2.hour <= 23):
         return True
       else:
         if (t1.hour > t2.hour):
