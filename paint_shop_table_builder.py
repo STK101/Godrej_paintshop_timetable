@@ -71,7 +71,7 @@ def check_shade(colour):
     return 1
 
 def shift(t1):
-  if ( (t1.hour > 8 and t1.hour < 15) or (t1.hour == 8 and t1.min >= 0)):
+  if ( (t1.hour > 8 and t1.hour <= 15) or (t1.hour == 8 and t1.min >= 0)):
     return 1
   else:
     return 2
