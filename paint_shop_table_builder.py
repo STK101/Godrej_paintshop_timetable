@@ -107,6 +107,7 @@ def time_table_gen(source, line ,cold_start_min = 30):
   df = pd.read_csv(source, index_col = 0)
   if (len(df) == 0):
     return df
+  """
   if (line == 1):
     t1 =  list((df["PRIORITY"]).astype(int) == 1)
     t0 =  list((df["PRIORITY"]).astype(int) == 0)
@@ -117,6 +118,8 @@ def time_table_gen(source, line ,cold_start_min = 30):
     t3 =  list((df["PRIORITY"]).astype(int) == 3)
     to = list(np.logical_or(t2,t3))
     l1 = df[to]
+  """
+  l1 = df
   l1.reset_index(drop = True, inplace = True)
   time = timer(8,30,0)
   if (len(l1) == 0):
